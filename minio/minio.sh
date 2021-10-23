@@ -1,12 +1,26 @@
-#!/bin/bash
+#!/bin/bash -e
+
+ip4=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
+
 if [[ -z "${IP_ADDR}" ]]; then
-    echo "IP_ADDR environment variable hasn't been set. Exiting."
-    exit 1
+    echo "IP_ADDR environment variable hasn't been set. Using $ip4 to create MinIO. To Use a different IP address to expose MinIO, set IP_ADDR env var"
+    IP_ADDR=$ip4
 fi
+
+generate_random_password() {
+     random=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c7)
+     upper=$(tr -dc 'A-Z' </dev/urandom | head -c1)
+     lower=$(tr -dc 'a-z' </dev/urandom | head -c1)
+     digit=$(tr -dc '0-9' </dev/urandom | head -c1)
+     echo $(echo $random$upper$lower$digit | fold -w1 | shuf | tr -d '\n')
+}
+
 if [[ -z "${CERTPASS}" ]]; then
-    echo "CERTPASS environment variable hasn't been set. Set this environment variable to a password that can be used for private key generation for certificate creation."
-    exit 1
+    CERTPASS="$(generate_random_password)"
+    echo "CERTPASS Environment var does not exist. Generating a random password $CERTPASS."
 fi
+
+
 MINIO=./minio
 if test -f "$MINIO"; then
     echo "minio executable exists. No need to download"
@@ -45,9 +59,9 @@ DNS.1 = localhost
 IP.2 = $IP_ADDR
 " > ./openssl.conf
 
-openssl genrsa -aes256 -passout env:CERTPASS -out private-pkcs8-key.key 2048
-openssl rsa -in private-pkcs8-key.key -aes256  -passin env:CERTPASS -passout env:CERTPASS -out private.key
-openssl req -new -x509 -nodes -days 730 -key private.key  -passin env:CERTPASS -out public.crt -config openssl.conf
+openssl genrsa -aes256 -passout pass:$CERTPASS -out private-pkcs8-key.key 2048
+openssl rsa -in private-pkcs8-key.key -aes256  -passin pass:$CERTPASS -passout pass:$CERTPASS -out private.key
+openssl req -new -x509 -nodes -days 730 -key private.key -passin pass:$CERTPASS -out public.crt -config openssl.conf
 popd
 
 export MINIO_ROOT_USER=saurabh
