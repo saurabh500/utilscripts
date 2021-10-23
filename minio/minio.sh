@@ -79,6 +79,7 @@ openssl genrsa -aes256 -passout pass:$MINIO_CERT_PASSWD -out private-pkcs8-key.k
 openssl rsa -in private-pkcs8-key.key -aes256  -passin pass:$MINIO_CERT_PASSWD -passout pass:$MINIO_CERT_PASSWD -out private.key
 openssl req -new -x509 -nodes -days 730 -key private.key -passin pass:$MINIO_CERT_PASSWD -out public.crt -config openssl.conf
 
+echo "The minio certificate is placed in ./miniocert/public.crt This file would be needed in Root CA of the client interacting with MinIO because this is a self-signed cert."
 popd
 
 export MINIO_SERVER_URL=https://$IP_ADDR:9000
