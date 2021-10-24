@@ -6,8 +6,8 @@ This utility might work on other Linux distributions but hasn't been tested.
 The utility does the following:
 
 0. Downloads the minio binary in the same folder as the script.
-1. Create multiple data folders for Minio to place the files.
-2. Generate a self-signed certificate for MinIO to use and serve HTTPS requests.
+1. Create 4 data folders for Minio to place the files. The directories are at path `./miniodata/data{1..4}`
+2. Generate a self-signed certificate for MinIO to use and serve HTTPS requests. The certificate and private key is placed in `./miniocert` directory.
 3. Launches Minio with `Erasure Coding`
 
 The script is not meant to be used for production. 
