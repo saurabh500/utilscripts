@@ -55,6 +55,7 @@ pushd miniocert
 if test -f "./openssl.conf"; then
     echo "Found openssl.conf. Skipping certificate generation."
 else
+    HOSTNAME=`hostname`
     # Create Open SSL config.
     echo "openssh.conf was not found. Creating..."
     echo "
@@ -78,6 +79,7 @@ else
     IP.1 = 127.0.0.1
     DNS.1 = localhost
     IP.2 = $IP_ADDR
+    DNS.2 = $HOSTNAME
     " > ./openssl.conf
 fi
 
