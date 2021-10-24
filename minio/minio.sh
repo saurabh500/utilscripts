@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-PASSWORD_FILE="/var/run/user/scratch/miniocertpass.txt"
+# Get the IP address if not set in env var.
 if [[ -z "${IP_ADDR}" ]]; then
     ip4=$(/sbin/ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1)
 
