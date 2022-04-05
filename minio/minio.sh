@@ -93,5 +93,10 @@ echo "The minio certificate is placed in ./miniocert/public.crt This file would 
 popd
 
 # Launch minio.
+#
 export MINIO_SERVER_URL=https://$IP_ADDR:9000
+
+# This var allows minio to be run in erasure coding mode, without complaining about non-mounted drives on root.
+#
+export MINIO_CI_CD=on
 ./minio server ./miniodata/data{1...8} --console-address ":9001" --certs-dir ./miniocert
