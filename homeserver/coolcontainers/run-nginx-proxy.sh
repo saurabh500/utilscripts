@@ -28,12 +28,23 @@ mkdir -p "$NGINX_CONFIG_DIR"
 
 # Create nginx configuration
 cat > "$NGINX_CONFIG_DIR/default.conf" << 'EOF'
+# Default server - catches all other hostnames
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location / {
+        return 200 'nginx reverse proxy is running\nUse dp.home.io to access Dumbpad\n';
+        add_header Content-Type text/plain;
+    }
+}
+
+# Dumbpad server - only for dp.home.io
 server {
     listen 80;
-    server_name 10.0.0.85;
+    server_name dp.home.io;
 
-    # Dumbpad reverse proxy - proxy everything under /dp/
-    location /dp/ {
+    location / {
         proxy_pass http://10.0.0.131:3000/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
@@ -43,19 +54,6 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
-        
-        # Handle redirects properly
-        proxy_redirect http://10.0.0.131:3000/ /dp/;
-        proxy_redirect http://$host/ /dp/;
-        
-        # Add a header to help with debugging
-        add_header X-Proxy-Path /dp/ always;
-    }
-
-    # Root location
-    location / {
-        return 200 'nginx reverse proxy is running\n';
-        add_header Content-Type text/plain;
     }
 }
 EOF
@@ -86,8 +84,8 @@ docker run -d \
 
 echo ""
 echo "✅ nginx reverse proxy started successfully"
-echo "📍 Access Dumbpad at: http://10.0.0.85/dp/"
-echo "📍 Test nginx at: http://10.0.0.85/"
+echo "📍 Access Dumbpad at: http://dp.home.io/"
+echo "📍 Make sure dp.home.io resolves to 10.0.0.85 in your DNS or /etc/hosts"
 echo ""
 echo "Useful commands:"
 echo "  - View logs: docker logs -f nginx-proxy"
