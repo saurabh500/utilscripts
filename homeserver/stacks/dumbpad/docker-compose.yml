@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  dumbpad:
+    image: edgd1er/dumbpad:latest
+    container_name: dumbpad
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - TZ=America/Los_Angeles
+    restart: unless-stopped
