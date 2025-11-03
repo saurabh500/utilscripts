@@ -132,23 +132,38 @@ $SSH_CMD "sudo mkdir -p $REMOTE_DIR && sudo chmod 755 $REMOTE_DIR" || {
 print_info "Checking existing NFS exports..."
 if $SSH_CMD "grep -q '$REMOTE_DIR' /etc/exports 2>/dev/null"; then
     print_warning "Export for $REMOTE_DIR already exists in /etc/exports"
-    read -p "Remove existing export and continue? [y/N]: " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        $SSH_CMD "sudo sed -i '\|$REMOTE_DIR|d' /etc/exports"
-        print_info "Removed existing export"
+    
+    # Check if this specific IP already has access
+    if $SSH_CMD "grep '$REMOTE_DIR' /etc/exports | grep -q '$LOCAL_IP'"; then
+        print_info "IP $LOCAL_IP already has access to $REMOTE_DIR"
+        print_info "Existing configuration will be preserved"
     else
-        print_error "Cannot proceed with existing export"
-        exit 1
+        print_info "Adding $LOCAL_IP to existing export configuration..."
+        
+        # Get the existing export line
+        EXISTING_EXPORT=$($SSH_CMD "grep '$REMOTE_DIR' /etc/exports")
+        
+        # Add the new IP to the existing line
+        # This appends the IP with its options to the existing export
+        NEW_EXPORT="$EXISTING_EXPORT $LOCAL_IP($NFS_EXPORT_OPTS)"
+        
+        # Replace the old line with the updated one
+        $SSH_CMD "sudo sed -i '\|^$REMOTE_DIR|c\\$NEW_EXPORT' /etc/exports" || {
+            print_error "Failed to update NFS export"
+            exit 1
+        }
+        
+        print_success "Added $LOCAL_IP to export for $REMOTE_DIR"
     fi
+else
+    # Add new NFS export
+    print_info "Adding new NFS export configuration..."
+    $SSH_CMD "echo '$REMOTE_DIR    $LOCAL_IP($NFS_EXPORT_OPTS)' | sudo tee -a /etc/exports" || {
+        print_error "Failed to add NFS export"
+        exit 1
+    }
+    print_success "Created new export for $REMOTE_DIR"
 fi
-
-# Add NFS export
-print_info "Adding NFS export configuration..."
-$SSH_CMD "echo '$REMOTE_DIR    $LOCAL_IP($NFS_EXPORT_OPTS)' | sudo tee -a /etc/exports" || {
-    print_error "Failed to add NFS export"
-    exit 1
-}
 
 # Export the shared directory
 print_info "Exporting NFS shares..."
