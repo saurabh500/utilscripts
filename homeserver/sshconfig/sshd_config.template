@@ -1,0 +1,102 @@
+# SSH Server Configuration
+# Enhanced security: Password auth for LAN, Key-based only for external
+
+# Basic SSH Configuration
+Port 22
+Protocol 2
+
+# Logging
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# Authentication
+LoginGraceTime 2m
+PermitRootLogin no
+StrictModes yes
+MaxAuthTries 3
+MaxSessions 10
+
+# Public key authentication (enabled globally)
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys .ssh/authorized_keys2
+
+# Default: Disable password authentication (will be overridden for LAN)
+PasswordAuthentication no
+PermitEmptyPasswords no
+
+# Challenge-response authentication
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+
+# Other authentication methods
+HostbasedAuthentication no
+IgnoreRhosts yes
+
+# Security features
+PermitUserEnvironment no
+Compression delayed
+UsePAM yes
+X11Forwarding no
+PrintMotd no
+AcceptEnv LANG LC_*
+
+# Subsystem
+Subsystem sftp /usr/lib/openssh/sftp-server
+
+# ============================================================
+# CONDITIONAL AUTHENTICATION BASED ON SOURCE IP
+# ============================================================
+
+# Configuration for LAN connections
+# REPLACE THE IP RANGES BELOW WITH YOUR ACTUAL LAN SUBNET(S)
+# Common examples:
+#   - 192.168.1.0/24 (for 192.168.1.1 through 192.168.1.254)
+#   - 10.0.0.0/8 (for entire 10.x.x.x range)
+#   - 172.16.0.0/12 (for 172.16.x.x through 172.31.x.x)
+
+Match Address 192.168.1.0/24
+    PasswordAuthentication yes
+    # Optionally allow root login from LAN (not recommended)
+    # PermitRootLogin yes
+
+# If you have multiple LAN subnets, add them here:
+# Match Address 10.0.0.0/24
+#     PasswordAuthentication yes
+
+# Configuration for localhost (always allow password)
+Match Address 127.0.0.1,::1
+    PasswordAuthentication yes
+
+# Reset to defaults for all other addresses (external connections)
+# This ensures external connections ONLY use key-based authentication
+Match Address *,!192.168.1.0/24,!127.0.0.1,!::1
+    PasswordAuthentication no
+    PubkeyAuthentication yes
+
+# End of conditional configuration
+Match all
+
+# ============================================================
+# ADDITIONAL SECURITY OPTIONS (Uncomment to enable)
+# ============================================================
+
+# Limit SSH access to specific users or groups
+# AllowUsers user1 user2
+# AllowGroups sshusers
+
+# Deny specific users or groups
+# DenyUsers baduser
+# DenyGroups nossh
+
+# Restrict SSH to specific network interfaces
+# ListenAddress 0.0.0.0
+# ListenAddress ::
+
+# Use stronger encryption algorithms (for modern clients)
+# Ciphers chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com
+# MACs hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com
+# KexAlgorithms curve25519-sha256,curve25519-sha256@libssh.org,diffie-hellman-group-exchange-sha256
+
+# Session timeout (disconnect idle sessions after 10 minutes)
+# ClientAliveInterval 300
+# ClientAliveCountMax 2
