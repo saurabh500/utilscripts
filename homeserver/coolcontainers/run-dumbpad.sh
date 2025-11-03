@@ -46,10 +46,14 @@ docker run -d -p 3000:3000 \
   -v dumbpad:/app/data \
   --name dumbpad \
   --restart unless-stopped \
+  -e BASE_URL="${BASE_URL:-http://localhost:3000}" \
   dumbwareio/dumbpad:latest
 
 echo "✅ Dumbpad container started successfully"
 echo "📍 Access it at: http://localhost:3000"
+echo ""
+echo "💡 To use with nginx reverse proxy at /dp/, set BASE_URL:"
+echo "   BASE_URL=http://10.0.0.85/dp ./run-dumbpad.sh"
 echo ""
 echo "Useful commands:"
 echo "  - View logs: docker logs -f dumbpad"
