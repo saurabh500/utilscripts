@@ -147,8 +147,8 @@ if $SSH_CMD "grep -q '$REMOTE_DIR' /etc/exports 2>/dev/null"; then
         # This appends the IP with its options to the existing export
         NEW_EXPORT="$EXISTING_EXPORT $LOCAL_IP($NFS_EXPORT_OPTS)"
         
-        # Replace the old line with the updated one
-        $SSH_CMD "sudo sed -i '\|^$REMOTE_DIR|c\\$NEW_EXPORT' /etc/exports" || {
+        # Replace the old line with the updated one using a temp file approach
+        $SSH_CMD "sudo sed -i.bak '\|^$REMOTE_DIR|d' /etc/exports && echo '$NEW_EXPORT' | sudo tee -a /etc/exports > /dev/null" || {
             print_error "Failed to update NFS export"
             exit 1
         }
