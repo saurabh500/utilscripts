@@ -3,6 +3,7 @@ services:
     image: dumbwareio/dumbpad:latest
     container_name: dumbpad
     restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
     ports:
       - ${DUMBPAD_PORT:-3000}:3000
     volumes:
